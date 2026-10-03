@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CodeBuddy - Local AI Coding Tutor</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <div class="logo">
+                <div class="logo-icon">⌘</div>
+
+                <div>
+                    <h1>CodeBuddy</h1>
+                    <p>Local AI Coding Tutor</p>
+                </div>
+            </div>
+
+            <nav>
+
+                <button class="menu-btn active" onclick="selectMode('ask')">
+                    💬
+                    <span>Ask Question</span>
+                </button>
+
+                <button class="menu-btn" onclick="selectMode('debug')">
+                    🐛
+                    <span>Debug My Code</span>
+                </button>
+
+                <button class="menu-btn" onclick="selectMode('hint')">
+                    💡
+                    <span>Give Me a Hint</span>
+                </button>
+
+                <button class="menu-btn" onclick="selectMode('practice')">
+                    📝
+                    <span>Practice</span>
+                </button>
+
+            </nav>
+
+            <div class="local-status">
+                <span class="status-dot"></span>
+
+                <div>
+                    <strong>Local AI</strong>
+                    <p>Ollama connected</p>
+                </div>
+            </div>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="main">
+
+            <header class="header">
+
+                <div>
+                    <h2 id="mode-title">Ask a Coding Question</h2>
+                    <p id="mode-description">
+                        Ask CodeBuddy anything about programming.
+                    </p>
+                </div>
+
+                <div class="model-badge">
+                    Qwen2.5-Coder
+                </div>
+
+            </header>
+
+
+            <!-- Chat Area -->
+            <section class="chat-area" id="chat-area">
+
+                <div class="welcome">
+
+                    <div class="welcome-icon">
+                        🤖
+                    </div>
+
+                    <h2>Hi! I'm CodeBuddy 👋</h2>
+
+                    <p>
+                        Your local AI programming tutor.
+                        Ask questions, debug code, get hints,
+                        or practice programming.
+                    </p>
+
+                    <div class="suggestions">
+
+                        <button onclick="useSuggestion('Explain Python loops to me')">
+                            Explain Python loops
+                        </button>
+
+                        <button onclick="useSuggestion('What is an array?')">
+                            What is an array?
+                        </button>
+
+                        <button onclick="useSuggestion('Give me a Python practice question')">
+                            Give me practice
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- Input -->
+            <section class="input-section">
+
+                <textarea id="user-input" placeholder="Ask a programming question..." rows="4"></textarea>
+
+                <div class="input-bottom">
+
+                    <span id="input-hint">
+                        CodeBuddy runs locally on your computer 🔒
+                    </span>
+
+                    <button id="send-btn" onclick="sendMessage()">
+                        Send ➤
+                    </button>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <script>
+
+        let currentMode = "ask";
+
+
+        function selectMode(mode) {
+
+            currentMode = mode;
+
+            const title = document.getElementById("mode-title");
+            const description = document.getElementById("mode-description");
+            const input = document.getElementById("user-input");
+
+            const buttons = document.querySelectorAll(".menu-btn");
+
+            buttons.forEach(button => {
+                button.classList.remove("active");
+            });
+
+            if (mode === "ask") {
+
+                title.textContent = "Ask a Coding Question";
+
+                description.textContent =
+                    "Ask CodeBuddy anything about programming.";
+
+                input.placeholder =
+                    "Example: What is a Python variable?";
+
+                buttons[0].classList.add("active");
+
+            }
+
+            else if (mode === "debug") {
+
+                title.textContent = "Debug My Code";
+
+                description.textContent =
+                    "Paste your code and CodeBuddy will help find the problem.";
+
+                input.placeholder =
+                    "Paste your code here...";
+
+                buttons[1].classList.add("active");
+
+            }
+
+            else if (mode === "hint") {
+
+                title.textContent = "Give Me a Hint";
+
+                description.textContent =
+                    "Get guidance without receiving the complete solution.";
+
+                input.placeholder =
+                    "Describe the coding problem you're solving...";
+
+                buttons[2].classList.add("active");
+
+            }
+
+            else if (mode === "practice") {
+
+                title.textContent = "Practice";
+
+                description.textContent =
+                    "Generate a beginner-friendly coding problem.";
+
+                input.placeholder =
+                    "Example: Give me a Python loops problem.";
+
+                buttons[3].classList.add("active");
+            }
+        }
+
+
+        function useSuggestion(text) {
+
+            document.getElementById("user-input").value = text;
+
+        }
+
+
+        async function sendMessage() {
+
+            const input =
+                document.getElementById("user-input");
+
+            const message = input.value.trim();
+
+            if (message === "") {
+                return;
+            }
+
+            addMessage(message, "user");
+
+            input.value = "";
+
+            addMessage("Thinking... 🤔", "bot");
+
+            try {
+
+                const response = await fetch("/ask", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        question: message
+                    })
+
+                });
+
+                const data = await response.json();
+
+                const messages =
+                    document.querySelectorAll(".message.bot");
+
+                messages[messages.length - 1].textContent =
+                    data.answer;
+
+            }
+
+            catch (error) {
+
+                const messages =
+                    document.querySelectorAll(".message.bot");
+
+                messages[messages.length - 1].textContent =
+                    "Sorry, I couldn't connect to CodeBuddy.";
+
+                console.error(error);
+            }
+        }
+
+
+        function addMessage(text, type) {
+
+            const chat =
+                document.getElementById("chat-area");
+
+            const message =
+                document.createElement("div");
+
+            message.className =
+                "message " + type;
+
+            message.textContent = text;
+
+            chat.appendChild(message);
+
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+    </script>
+
+</body>
+
+</html>
